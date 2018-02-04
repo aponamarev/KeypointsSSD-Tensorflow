@@ -74,14 +74,14 @@ import threading
 
 import numpy as np
 import tensorflow as tf
-from datasets.pycocotools.coco import COCO
+from pycocotools.coco import COCO
 
 tf.app.flags.DEFINE_string('data_directory', '/tmp/',
                            'Image data directory')
 tf.app.flags.DEFINE_string('output_directory', '/tmp/',
                            'Output data directory')
 
-tf.app.flags.DEFINE_integer('shards', 1024,
+tf.app.flags.DEFINE_integer('shards', 64,
                             'Number of shards in training TFRecord files.')
 
 tf.app.flags.DEFINE_integer('num_threads', 8,
@@ -317,7 +317,7 @@ def _process_image_files_batch(coder, thread_index, ranges, name, imgs, img_anns
   for s in range(num_shards_per_batch):
     # Generate a sharded version of the file name, e.g. 'train-00002-of-00010'
     shard = thread_index * num_shards_per_batch + s
-    output_filename = '%s-%.5d-of-%.5d' % ('mscoco', shard, num_shards)
+    output_filename = '%s-%.5d-of-%.5d.tfrecord' % ('mscoco', shard, num_shards)
     output_file = os.path.join(FLAGS.output_directory, output_filename)
     writer = tf.python_io.TFRecordWriter(output_file)
 
