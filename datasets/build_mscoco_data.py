@@ -152,10 +152,8 @@ def _convert_to_example(image_buffer, label, bbox,
     image_buffer: string, JPEG encoding of RGB image
     label: integer list, identifier for the ground truth for the network
     bbox: list of bounding boxes; each box is a list of float
-      specifying [xmin, ymin, xmax, ymax]. xmin, ymin, xmax, ymax are normalized by
-      image width and height: xmin = xmin / image_width, ymin = ymin / image_hieght
+      specifying [xmin, ymin, xmax, ymax].
     keypoints: list of key points; each key point element contains 17 points specifying [x, y].
-      x, y are normalized: x = x / image_width, y = y / image_height
     height: integer, image height in pixels
     width: integer, image width in pixels
   Returns:
@@ -165,13 +163,53 @@ def _convert_to_example(image_buffer, label, bbox,
   ymin = []
   xmax = []
   ymax = []
-  keypoints_flattened = []
+
+  xnose = []
+  ynose = []
+  xleft_eye = []
+  yleft_eye = []
+  xright_eye = []
+  yright_eye = []
+  xleft_ear = []
+  yleft_ear = []
+  xright_ear = []
+  yright_ear = []
+  xleft_shoulder = []
+  yleft_shoulder = []
+  xright_shoulder = []
+  yright_shoulder = []
+  xleft_elbow = []
+  yleft_elbow = []
+  xright_elbow = []
+  yright_elbow = []
+  xleft_wrist = []
+  yleft_wrist = []
+  xright_wrist = []
+  yright_wrist = []
+  xleft_hip = []
+  yleft_hip = []
+  xright_hip = []
+  yright_hip = []
+  xleft_knee = []
+  yleft_knee = []
+  xright_knee = []
+  yright_knee = []
+  xleft_ankle = []
+  yleft_ankle = []
+  xright_ankle = []
+  yright_ankle = []
   for b, k in zip(bbox, keypoints):
     assert len(b) == 4
     assert len(k) == 34
     # pylint: disable=expression-not-assigned
     [l.append(point) for l, point in zip([xmin, ymin, xmax, ymax], b)]
-    keypoints_flattened.extend(k)
+    [l.append(point) for l, point in zip([
+      xnose, ynose, xleft_eye, yleft_eye, xright_eye, yright_eye, xleft_ear,
+      yleft_ear, xright_ear, yright_ear, xleft_shoulder, yleft_shoulder,
+      xright_shoulder, yright_shoulder, xleft_elbow, yleft_elbow, xright_elbow,
+      yright_elbow, xleft_wrist, yleft_wrist, xright_wrist, yright_wrist, xleft_hip,
+      yleft_hip, xright_hip, yright_hip, xleft_knee, yleft_knee, xright_knee, yright_knee,
+      xleft_ankle, yleft_ankle, xright_ankle, yright_ankle], k)]
     # pylint: enable=expression-not-assigned
 
   colorspace = 'RGB'
@@ -179,18 +217,53 @@ def _convert_to_example(image_buffer, label, bbox,
   image_format = 'JPEG'
 
   example = tf.train.Example(features=tf.train.Features(feature={
-      'image/encoded': _bytes_feature(image_buffer),
-      'image/format': _bytes_feature(image_format.encode('utf-8')),
-      'image/height': _int64_feature(height),
-      'image/width': _int64_feature(width),
-      'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
-      'image/channels': _int64_feature(channels),
-      'image/object/bbox/xmin': _float_feature(xmin),
-      'image/object/bbox/xmax': _float_feature(xmax),
-      'image/object/bbox/ymin': _float_feature(ymin),
-      'image/object/bbox/ymax': _float_feature(ymax),
-      'image/object/keypoints': _float_feature(keypoints_flattened),
-      'image/object/bbox/label': _int64_feature(label)}))
+    'image/encoded': _bytes_feature(image_buffer),
+    'image/format': _bytes_feature(image_format.encode('utf-8')),
+    'image/height': _int64_feature(height),
+    'image/width': _int64_feature(width),
+    'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
+    'image/channels': _int64_feature(channels),
+    'image/object/bbox/xmin': _float_feature(xmin),
+    'image/object/bbox/xmax': _float_feature(xmax),
+    'image/object/bbox/ymin': _float_feature(ymin),
+    'image/object/bbox/ymax': _float_feature(ymax),
+    'image/object/bbox/label': _int64_feature(label),
+    'image/object/keypoints/ynose': _float_feature(ynose),
+    'image/object/keypoints/xnose': _float_feature(xnose),
+    'image/object/keypoints/yleft_eye': _float_feature(yleft_eye),
+    'image/object/keypoints/xleft_eye': _float_feature(xleft_eye),
+    'image/object/keypoints/yright_eye': _float_feature(yright_eye),
+    'image/object/keypoints/xright_eye': _float_feature(xright_eye),
+    'image/object/keypoints/yleft_ear': _float_feature(yleft_ear),
+    'image/object/keypoints/xleft_ear': _float_feature(xleft_ear),
+    'image/object/keypoints/yright_ear': _float_feature(yright_ear),
+    'image/object/keypoints/xright_ear': _float_feature(xright_ear),
+    'image/object/keypoints/yleft_shoulder': _float_feature(yleft_shoulder),
+    'image/object/keypoints/xleft_shoulder': _float_feature(xleft_shoulder),
+    'image/object/keypoints/yright_shoulder': _float_feature(yright_shoulder),
+    'image/object/keypoints/xright_shoulder': _float_feature(xright_shoulder),
+    'image/object/keypoints/yleft_elbow': _float_feature(yleft_elbow),
+    'image/object/keypoints/xleft_elbow': _float_feature(xleft_elbow),
+    'image/object/keypoints/yright_elbow': _float_feature(yright_elbow),
+    'image/object/keypoints/xright_elbow': _float_feature(xright_elbow),
+    'image/object/keypoints/yleft_wrist': _float_feature(yleft_wrist),
+    'image/object/keypoints/xleft_wrist': _float_feature(xleft_wrist),
+    'image/object/keypoints/yright_wrist': _float_feature(yright_wrist),
+    'image/object/keypoints/xright_wrist': _float_feature(xright_wrist),
+    'image/object/keypoints/yleft_hip': _float_feature(yleft_hip),
+    'image/object/keypoints/xleft_hip': _float_feature(xleft_hip),
+    'image/object/keypoints/yright_hip': _float_feature(yright_hip),
+    'image/object/keypoints/xright_hip': _float_feature(xright_hip),
+    'image/object/keypoints/yleft_knee': _float_feature(yleft_knee),
+    'image/object/keypoints/xleft_knee': _float_feature(xleft_knee),
+    'image/object/keypoints/yright_knee': _float_feature(yright_knee),
+    'image/object/keypoints/xright_knee': _float_feature(xright_knee),
+    'image/object/keypoints/yleft_ankle': _float_feature(yleft_ankle),
+    'image/object/keypoints/xleft_ankle': _float_feature(xleft_ankle),
+    'image/object/keypoints/yright_ankle': _float_feature(yright_ankle),
+    'image/object/keypoints/xright_ankle': _float_feature(xright_ankle),
+    }))
+
   return example
 
 
@@ -257,35 +330,40 @@ def _process_image(filename, coder):
   return image_data, height, width
 
 def _process_bbox(bbox, height, width):
+  """
+  Converts MSCOCO keypoints [xmin, ymin, width, height] into
+  Tensorflow format [xmin, ymin, xmax, ymax]
+  :param bbox:
+  :param height:
+  :param width:
+  :return:
+  """
   xmin, ymin, bw, bh = bbox
   xmax = xmin + bw
   ymax = ymin + bh
-  ymax, ymin = ymax / height, ymin / height
-  xmax, xmin = xmax / width, xmin / width
 
   return [xmin, ymin, xmax, ymax]
 
 def _process_keypoints(keypoints, height, width):
   """
-  List of key points; each key point element contains 17 points specifying [x, y, visibility].
-  :param keypoints:
+  :param keypoints: List of key points; each key point element
+  contains 17 points specifying [x, y, visibility].
   :return: List of key points; each key point  specifying [x,y]
-    x, y are normalized: x = x / image_width, y = y / image_height
     x, y for absent points are float('Nan'), float('Nan')
   """
 
-  _normalize = lambda x,y,v: [x / width, y / height] if v > 0 else [float('Nan'), float('Nan')]
+  _filter = lambda x,y,v: [x, y] if v > 0 else [float('Nan'), float('Nan')]
 
   x = keypoints[0::3]
   y = keypoints[1::3]
   v = keypoints[2::3]
 
-  normalized_keypoints = []
+  filtered_keypoints = []
   _ = list(
-    map(lambda args: normalized_keypoints.extend(_normalize(*args)), zip(x, y, v))
+    map(lambda args: filtered_keypoints.extend(_filter(*args)), zip(x, y, v))
   )
 
-  return normalized_keypoints
+  return filtered_keypoints
 
 def _process_image_files_batch(coder, thread_index, ranges, name, imgs, img_anns, num_shards):
   """Processes and saves list of images as TFRecord in 1 thread.
