@@ -159,6 +159,9 @@ def _convert_to_example(image_buffer, label, bbox,
     width: integer, image width in pixels
   Returns:
     Example proto
+
+  Note that x,y points for bounding boxes and keypoints are normalized by the image scale:
+  x = x / image_width, y = y / image_height
   """
   xmin = []
   ymin = []
@@ -335,14 +338,17 @@ def _process_bbox(bbox, height, width):
   """
   Converts MSCOCO keypoints [xmin, ymin, width, height] into
   Tensorflow format [xmin, ymin, xmax, ymax]
-  :param bbox:
-  :param height:
-  :param width:
-  :return:
+  x, y points are normalized with respect to image scale: x / image_width, y / image_height
+  :param bbox: [xmin, ymin, width, height]
+  :param height: image height
+  :param width: image width
+  :return: [xmin, ymin, xmax, ymax]
   """
   xmin, ymin, bw, bh = bbox
   xmax = xmin + bw
   ymax = ymin + bh
+  ymin, ymax = ymin / height, ymax / height
+  xmin, xmax = xmin / width, xmax / width
 
   return [xmin, ymin, xmax, ymax]
 
@@ -351,10 +357,11 @@ def _process_keypoints(keypoints, height, width):
   :param keypoints: List of key points; each key point element
   contains 17 points specifying [x, y, visibility].
   :return: List of key points; each key point  specifying [x,y]
+    x, y points are normalized with respect to image scale: x / image_width, y / image_height
     x, y for absent points are float('Nan'), float('Nan')
   """
 
-  _filter = lambda x,y,v: [x, y] if v > 0 else [float('Nan'), float('Nan')]
+  _normalize = lambda x,y,v: [x / height, y / width] if v > 0 else [float('Nan'), float('Nan')]
 
   x = keypoints[0::3]
   y = keypoints[1::3]
@@ -362,7 +369,7 @@ def _process_keypoints(keypoints, height, width):
 
   filtered_keypoints = []
   _ = list(
-    map(lambda args: filtered_keypoints.extend(_filter(*args)), zip(x, y, v))
+    map(lambda args: filtered_keypoints.extend(_normalize(*args)), zip(x, y, v))
   )
 
   return filtered_keypoints
@@ -430,7 +437,7 @@ def _process_image_files_batch(coder, thread_index, ranges, name, imgs, img_anns
           sys.stdout.flush()
 
       except:
-        pass
+        shard_counter += 1
 
     writer.close()
     print('%s [thread %d]: Wrote %d images to %s' %
