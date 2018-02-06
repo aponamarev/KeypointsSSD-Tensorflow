@@ -17,17 +17,17 @@
 This TensorFlow script converts the training and evaluation data into
 a sharded data set.
 
-  train_directory/train-00000-of-TBD
-  train_directory/train-00001-of-TBD
+  train_directory/mscoco-00000-of-TBD
+  train_directory/mscoco-00001-of-TBD
   ...
-  train_directory/train-00127-of-TBD
+  train_directory/mscoco-00127-of-TBD
 
 and
 
-  validation_directory/validation-00000-of-TBD
-  validation_directory/validation-00001-of-TBD
+  validation_directory/mscoco-00000-of-TBD
+  validation_directory/mscoco-00001-of-TBD
   ...
-  validation_directory/validation-00127-of-TBD
+  validation_directory/mscoco-00127-of-TBD
 
 Each validation TFRecord file contains ~390 records. Each training TFREcord
 file contains ~1250 records. Each record within the TFRecord file is a
@@ -58,6 +58,7 @@ serialized Example proto. The Example proto contains the following fields:
   image/object/bbox/label: integer specifying the index in a classification
     layer. The label ranges from [1, 1000] where 0 is not used. Note this is
     always identical to the image label.
+  image/object/keypoints/[34 points]
 
 Note that the length of xmin is identical to the length of xmax, ymin and ymax
 for each example.
@@ -84,7 +85,7 @@ tf.app.flags.DEFINE_string('output_directory', '/tmp/',
 tf.app.flags.DEFINE_integer('shards', 64,
                             'Number of shards in training TFRecord files.')
 
-tf.app.flags.DEFINE_integer('num_threads', 8,
+tf.app.flags.DEFINE_integer('num_threads', 4,
                             'Number of threads to preprocess the images.')
 
 
@@ -219,10 +220,11 @@ def _convert_to_example(image_buffer, label, bbox,
   example = tf.train.Example(features=tf.train.Features(feature={
     'image/encoded': _bytes_feature(image_buffer),
     'image/format': _bytes_feature(image_format.encode('utf-8')),
-    'image/height': _int64_feature(height),
-    'image/width': _int64_feature(width),
-    'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
+    'image/shape': _int64_feature([height, width, channels]),
     'image/channels': _int64_feature(channels),
+    'image/height': _int64_feature(channels),
+    'image/width': _int64_feature(channels),
+    'image/colorspace': _bytes_feature(colorspace.encode('utf-8')),
     'image/object/bbox/xmin': _float_feature(xmin),
     'image/object/bbox/xmax': _float_feature(xmax),
     'image/object/bbox/ymin': _float_feature(ymin),

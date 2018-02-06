@@ -29,7 +29,7 @@ class MSCOCOKeypointsDecoder(ItemHandler):
   """An ItemHandler that concatenates a set of parsed Tensors to Bounding Boxes.
   """
 
-  def __init__(self, key=None):
+  def __init__(self, keys=None, prefix='image/object/keypoints/'):
     """Initialize the MSCOCO Keypoint handler.
 
     Args:
@@ -39,9 +39,32 @@ class MSCOCOKeypointsDecoder(ItemHandler):
     Raises:
       ValueError: if keys is not `None` and also not a list of exactly 4 keys
     """
-    if key is None:
-      keys = 'image/object/keypoints'
-    self._full_keys = key
+    if keys is None:
+      keys = [
+        'ynose',        'xnose',
+        'yleft_eye',    'xleft_eye',
+        'yright_eye',   'xright_eye',
+        'yleft_ear',    'xleft_ear',
+        'yright_ear',   'xright_ear',
+        'yleft_shoulder', 'xleft_shoulder',
+        'yright_shoulder', 'xright_shoulder',
+        'yleft_elbow',  'xleft_elbow',
+        'yright_elbow', 'xright_elbow',
+        'yleft_wrist',  'xleft_wrist',
+        'yright_wrist', 'xright_wrist',
+        'yleft_hip',    'xleft_hip',
+        'yright_hip',   'xright_hip',
+        'yleft_knee',   'xleft_knee',
+        'yright_knee',  'xright_knee',
+        'yleft_ankle',  'xleft_ankle',
+        'yright_ankle', 'xright_ankle'
+      ]
+    elif len(keys) != 34:
+      raise ValueError('BoundingBox expects 4 keys but got {}'.format(
+          len(keys)))
+    self._prefix = prefix
+    self._keys = keys
+    self._full_keys = [prefix + k for k in keys]
     super(MSCOCOKeypointsDecoder, self).__init__(self._full_keys)
 
   def tensors_to_item(self, keys_to_tensors):
@@ -54,9 +77,13 @@ class MSCOCOKeypointsDecoder(ItemHandler):
       [num_boxes, 17, 2] tensor of keypoints,
         i.e. 1 keypoint, in order [y, x].
     """
-    mscoco_keypoints = keys_to_tensors[self._full_keys]
-    if isinstance(mscoco_keypoints, sparse_tensor.SparseTensor):
-      mscoco_keypoints = mscoco_keypoints.values
-    mscoco_keypoints = array_ops.expand_dims(mscoco_keypoints, 0)
-    tf_keypoints = tf.reshape(mscoco_keypoints, [None, 17, 2])
-    return tf_keypoints[:,:,[1,0]]
+    tf_keypoints = []
+    for full_keys in self._full_keys:
+      mscoco_keypoints = keys_to_tensors[full_keys]
+      if isinstance(mscoco_keypoints, sparse_tensor.SparseTensor):
+        mscoco_keypoints = mscoco_keypoints.values
+      mscoco_keypoints = array_ops.expand_dims(mscoco_keypoints, 1)
+      tf_keypoints.append(mscoco_keypoints)
+    tf_keypoints = tf.concat(tf_keypoints, axis=1)
+    tf_keypoints = tf.reshape(tf_keypoints, [-1, 17, 2])
+    return tf_keypoints

@@ -18,10 +18,9 @@ import os
 
 import tensorflow as tf
 from tensorflow.contrib import slim
-from datasets import dataset_utils
 from datasets.mscoco_keypoint_decoder import MSCOCOKeypointsDecoder
 
-FILE_PATTERN = 'mscoco-.tfrecord'
+FILE_PATTERN = 'mscoco-*.tfrecord'
 
 VOC_LABELS = {
   'none': (0, 'Background'),
@@ -30,7 +29,7 @@ VOC_LABELS = {
 
 SPLITS_TO_SIZES = {
   'train': 32800,
-  'val': 3280
+  'val': 2693
 }
 
 ITEMS_TO_DESCRIPTIONS = {
@@ -60,8 +59,11 @@ def get_split(split_name, dataset_dir, file_pattern=FILE_PATTERN, reader=None,
       ValueError: if `split_name` is not a valid train/test split.
   """
   if split_name not in split_to_sizes:
-      raise ValueError('split name %s was not recognized.' % split_name)
-  file_pattern = os.path.join(dataset_dir, file_pattern)
+    raise ValueError('split name %s was not recognized.' % split_name)
+  if file_pattern:
+    file_pattern = os.path.join(os.path.join(dataset_dir, split_name), file_pattern)
+  else:
+    file_pattern = os.path.join(os.path.join(dataset_dir, split_name), FILE_PATTERN)
 
   # Allowing None in the signature so that dataset_factory can use the default.
   if reader is None:
@@ -74,12 +76,47 @@ def get_split(split_name, dataset_dir, file_pattern=FILE_PATTERN, reader=None,
     'image/width': tf.FixedLenFeature([1], tf.int64),
     'image/channels': tf.FixedLenFeature([1], tf.int64),
     'image/shape': tf.FixedLenFeature([3], tf.int64),
+
     'image/object/bbox/xmin': tf.VarLenFeature(dtype=tf.float32),
     'image/object/bbox/ymin': tf.VarLenFeature(dtype=tf.float32),
     'image/object/bbox/xmax': tf.VarLenFeature(dtype=tf.float32),
     'image/object/bbox/ymax': tf.VarLenFeature(dtype=tf.float32),
     'image/object/bbox/label': tf.VarLenFeature(dtype=tf.int64),
-    'image/object/keypoints': tf.VarLenFeature(dtype=tf.float32)
+
+    'image/object/keypoints/ynose': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xnose': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_eye': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_eye': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_eye': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_eye': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_ear': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_ear': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_ear': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_ear': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_shoulder': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_shoulder': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_shoulder': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_shoulder': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_elbow': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_elbow': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_elbow': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_elbow': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_wrist': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_wrist': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_wrist': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_wrist': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_hip': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_hip': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_hip': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_hip': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_knee': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_knee': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_knee': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_knee': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yleft_ankle': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xleft_ankle': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/yright_ankle': tf.VarLenFeature(dtype=tf.float32),
+    'image/object/keypoints/xright_ankle': tf.VarLenFeature(dtype=tf.float32)
   }
   items_to_handlers = {
     'image': slim.tfexample_decoder.Image('image/encoded', 'image/format'),
@@ -87,7 +124,7 @@ def get_split(split_name, dataset_dir, file_pattern=FILE_PATTERN, reader=None,
     'object/bbox': slim.tfexample_decoder.BoundingBox(
             ['xmin', 'ymin', 'xmax', 'ymax'], 'image/object/bbox/'),
     'object/label': slim.tfexample_decoder.Tensor('image/object/bbox/label'),
-    'object/keypoints': MSCOCOKeypointsDecoder('image/object/keypoints')
+    'object/keypoints': MSCOCOKeypointsDecoder()
   }
   decoder = slim.tfexample_decoder.TFExampleDecoder(
     keys_to_features, items_to_handlers)
@@ -102,13 +139,13 @@ def get_split(split_name, dataset_dir, file_pattern=FILE_PATTERN, reader=None,
 
 def main(*params):
 
-  split_name = 'train'
+  split_name = 'val'
   dataset_dir = '/Volumes/Data/Datasets/MSCOCO/'
 
   dataset = get_split(split_name, dataset_dir)
   provider = slim.dataset_data_provider.DatasetDataProvider(
     dataset,
-    num_readers=1,
+    num_readers=4,
     common_queue_capacity=8,
     common_queue_min=16,
     shuffle=False)
@@ -117,8 +154,12 @@ def main(*params):
     ['image', 'object/label', 'object/bbox', 'object/keypoints'])
 
   sess = tf.InteractiveSession()
+  _ = tf.train.start_queue_runners(sess)
   outputs = sess.run([image, glabels, gbboxes, keypoints])
+  print(len(outputs))
+  print(outputs[0].shape)
 
   print("Done")
 
-tf.app.run()
+if __name__ == "__main__":
+  tf.app.run()
